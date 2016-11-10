@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CANVAS - degradés</title>
+    <script src="js/jquery.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-content: stretch;
+            align-items: stretch;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+        
+        canvas {
+            display: block;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        #div {
+            position: relative;
+            order: 0;
+            flex: 1 1 auto;
+            align-self: auto;
+        }
+        
+        #cmd {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50px;
+            z-index: 10;
+        }
+        
+        #cmd div {
+            display: inline-block;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="cmd">
+        <div id="stop">0</div>/
+        <div id="start">1</div>
+    </div>
+    <div id="div"><canvas id="canvas"></canvas></div>
+    <script>
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+
+        var globalID;
+        var globalCounter = 0;
+
+        var ctx;
+        var colo;
+        var oCanvas = {
+            w: 960,
+            h: 960,
+        };
+        var oParts = [{
+            gcol: [],
+            coord: [
+                [0, 0],
+                [oCanvas.w / 2, oCanvas.h / 2]
+            ],
+        }, {
+            gcol: [],
+            coord: [
+                [oCanvas.w / 2, 0],
+                [oCanvas.w, oCanvas.h / 2]
+            ],
+        }, {
+            gcol: [],
+            coord: [
+                [0, oCanvas.h / 2],
+                [oCanvas.w / 2, oCanvas.h]
+            ],
+        }, {
+            gcol: [],
+            coord: [
+                [oCanvas.w / 2, oCanvas.h / 2],
+                [oCanvas.w, oCanvas.h]
+            ],
+        }];
+
+        $(document).ready(function() {
+
+            var canvas = $('#canvas');
+            ctx = canvas.get(0).getContext('2d');
+            ctx.canvas.width = oCanvas.w;
+            ctx.canvas.height = oCanvas.h;
+
+            sizeCanvas();
+
+            for (var i = 0; i < oParts.length; i++) {
+                var s = oParts[i].coord[0];
+                var e = oParts[i].coord[1];
+                var nb = Math.ceil(Math.random() * 3)+1;
+                for (var j = 0; j < nb; j++) {
+                    oParts[i].gcol.push(new oGradian(s, e));
+                }
+            }
+
+            globalID = requestAnimationFrame(animate);
+        });
+
+        function sizeCanvas() {
+            var w = $(window).width();
+            var h = $(window).height();
+            var s = (w > h) ? h : w;
+            $('#canvas').css({
+                'width': w,
+                'height': h,
+                'margin-top': 0
+            });
+        }
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+
+        function animate() {
+            globalID = requestAnimationFrame(animate);
+            // ctx.clearRect(0, 0, oCanvas.w, oCanvas.h);
+            
+            for (var i = 0; i < oParts.length; i++) {
+                for (var j = 0; j < oParts[i].gcol.length; j++) {
+                    var gr = oParts[i].gcol[j];
+                    if (gr&&globalCounter%10==0) gr.move();
+                    if (gr) gr.draw();
+                }
+            }
+
+            globalCounter++;
+        }
+
+
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+
+
+        $("#start").on("click", function() {
+            globalID = requestAnimationFrame(repeatOften);
+        });
+
+        $("#stop").on("click", function() {
+            cancelAnimationFrame(globalID);
+        });
+
+        $(window).on("resize", sizeCanvas);
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+
+        function oGradian(s, e) {
+            var w = oCanvas.w / 2;
+            var h = oCanvas.h / 2;
+            var s = s;
+            var e = e;
+            var c = [s[0] + w / 2, s[1] + h / 2];
+            var a = Math.random() * Math.PI * 2;
+            var cs = [];
+            var l = Math.ceil(Math.random() * 3) + 1;
+            var ra = w * (Math.random() * 4 / 3 + 4 / 3);
+            var lr = (Math.random()<0.5)?0:1;
+
+            for (var i = 0; i < l; i++) {
+                cs.push(new oColor(1, 1));
+            }
+
+            this.move = function() {
+                for (var i = 0; i < cs.length; i++) {
+                    cs[i].newColor();
+                }
+            };
+
+            this.draw = function() {
+                var ga, gb, gc, gd;
+                ga = Math.cos(a + Math.PI) * w / 2 + c[0];
+                gb = Math.sin(a + Math.PI) * w / 2 + c[1];
+                gc = Math.cos(a) * w / 2 + c[0];
+                gd = Math.sin(a) * w / 2 + c[1];
+
+                var grad = (lr)?ctx.createRadialGradient(ga, gb, 0, gc, gd, ra):ctx.createLinearGradient(ga,gb,gc,gd);
+
+                for (var i = 0; i < cs.length; i++) {
+                    grad.addColorStop(i / (cs.length - 1), cs[i].getColor());
+                }
+
+                ctx.fillStyle = grad;
+                ctx.fillRect(s[0], s[1], e[0], e[1]);
+
+            };
+        }
+
+        function oColor(cs, rd) {
+            var c1, c1d, c2, c2d, c3, c3d, c1r, c2r, c3r;
+            c1 = 0;
+            c2 = 0;
+            c3 = 0;
+            c4 = 0;
+            c1d = 1;
+            c2d = 1;
+            c3d = 1;
+            c4d = 1;
+            cs = (cs != undefined) ? cs : 10;
+            if (rd != undefined && rd) {
+                c1 = Math.floor(Math.random() * 256);
+                c2 = Math.floor(Math.random() * 256);
+                c3 = Math.floor(Math.random() * 256);
+                c4 = Math.floor(Math.random() * 256);
+            }
+
+            this.newColor = function() {
+                c1 += c1d * Math.random() * cs;
+                c2 += c2d * Math.random() * cs;
+                c3 += c3d * Math.random() * cs;
+                c4 += c4d * Math.random() * cs;
+
+                if (c1 < 0 && c1d == -1) c1d = 1;
+                if (c1 > 256 && c1d == 1) c1d = -1;
+                if (c2 < 0 && c2d == -1) c2d = 1;
+                if (c2 > 256 && c2d == 1) c2d = -1;
+                if (c3 < 0 && c3d == -1) c3d = 1;
+                if (c3 > 256 && c3d == 1) c3d = -1;
+                if (c4 < 0 && c4d == -1) c4d = 1;
+                if (c4 > 256 && c4d == 1) c4d = -1;
+
+                c1r = Math.floor(c1);
+                c2r = Math.floor(c2);
+                c3r = Math.floor(c3);
+                c4r = Math.floor(c4);
+            };
+
+            this.getNewColor = function() {
+                this.newColor();
+                return this.getColor();
+            }
+
+            this.getColor = function() {
+                return 'rgba(' + c1r + ',' + c2r + ',' + c3r + ',' + c4r / 256 + ')';
+            };
+
+            this.newColor();
+        }
+
+    </script>
+</body>
+
+</html>
