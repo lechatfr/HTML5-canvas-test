@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CANVAS - couleurs et lignes</title>
+    <script src="js/jquery.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-content: stretch;
+            align-items: stretch;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #div {
+            position: relative;
+            order: 0;
+            flex: 1 1 auto;
+            align-self: auto;
+        }
+        
+        #cmd {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50px;
+            z-index: 10;
+            color:red;
+        }
+        
+        #cmd div {
+            display: inline-block;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="cmd">
+        <div id="stop">0</div>/
+        <div id="start">1</div>
+    </div>
+    <div id="div"><canvas id="canvas"></canvas></div>
+    <script>
+        var globalID;
+
+        function repeatOften() {
+            globalID = requestAnimationFrame(repeatOften);
+            var colorr = colo.getNewColor();
+            for (var i = 0; i < oPoints.collection.length; i++) {
+                var point1 = oPoints.collection[i];
+                var point2 = (i == oPoints.collection.length - 1) ? oPoints.collection[0] : oPoints.collection[i + 1];
+
+                ctx.beginPath();
+                ctx.moveTo(point1.x, point1.y);
+                ctx.lineTo(point2.x, point2.y);
+                ctx.lineWidth = 20;
+                ctx.strokeStyle = colorr;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                point1.move();
+                point2.move();
+            }
+        }
+
+        $("#start").on("click", function() {
+            globalID = requestAnimationFrame(repeatOften);
+        });
+
+        $("#stop").on("click", function() {
+            cancelAnimationFrame(globalID);
+        });
+
+        $(document).ready(function() {
+            globalID = requestAnimationFrame(repeatOften);
+            oPoints.init();
+
+            var canvas = $('#canvas');
+            ctx = canvas.get(0).getContext('2d');
+            ctx.canvas.width = oCanvas.w;
+            ctx.canvas.height = oCanvas.h;
+
+        });
+
+        
+
+        var ctx;
+
+        var oCanvas = {
+            w: 1024,
+            h: 1024,
+        }
+        
+        var colo = new oColor();
+
+        var oPoints = {
+            collection: [],
+            init: function() {
+                this.collection = [
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint(),
+                    new oPoint()
+                ]
+            },
+        };
+
+        function oPoint() {
+            this.x = 512;
+            this.y = 512;
+            this.v = 10 * Math.random() + 2;
+            this.d = Math.PI * 2 * Math.random(); //Math.PI/6;//
+
+            this.move = function() {
+                this.x += Math.cos(this.d) * this.v;
+                this.y += Math.sin(this.d) * this.v;
+                var deviance = Math.random() * Math.PI / 4 - Math.PI / 8;
+                var mdx = Math.PI - this.d * 2 + deviance;
+                var mdy = Math.PI + (Math.PI / 2 - this.d) * 2 + deviance;
+                if (this.x < 0) {
+                    this.x = 0;
+                    this.d += mdx;
+                }
+                if (this.x > oCanvas.w) {
+                    this.x = oCanvas.w;
+                    this.d += mdx;
+                }
+                if (this.y < 0) {
+                    this.y = 0;
+                    this.d += mdy;
+                }
+                if (this.y > oCanvas.h) {
+                    this.y = oCanvas.h;
+                    this.d += mdy; //(this.d%Math.PI*2>Math.PI/2)?Math.PI/2:-Math.PI/2;
+                }
+            };
+        }
+        
+        function oColor(){
+            var c1, c1d, c2, c2d, c3, c3d, c1r, c2r, c3r;
+            c1 = 0;
+            c2 = 0;
+            c3 = 0;
+            c1d = 1;
+            c2d = 1;
+            c3d = 1;
+            
+            this.newColor = function(){
+                c1 += c1d * Math.random() * 5;
+                c2 += c2d * Math.random() * 5;
+                c3 += c3d * Math.random() * 5;
+
+                if (c1 < 0 && c1d == -1) c1d = 1;
+                if (c1 > 256 && c1d == 1) c1d = -1;
+                if (c2 < 0 && c2d == -1) c2d = 1;
+                if (c2 > 256 && c2d == 1) c2d = -1;
+                if (c3 < 0 && c3d == -1) c3d = 1;
+                if (c3 > 256 && c3d == 1) c3d = -1;
+
+                c1r = Math.floor(c1);
+                c2r = Math.floor(c2);
+                c3r = Math.floor(c3);
+            };
+            
+            this.getNewColor = function(){
+                this.newColor();
+                return this.getColor();
+            }
+            
+            this.getColor = function(){
+                return 'rgba(' + c1r + ',' + c2r + ',' + c3r + ',1)';
+            };
+        }
+
+    </script>
+</body>
+
+</html>

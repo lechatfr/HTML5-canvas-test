@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CANVAS - couleur et tunnel effet</title>
+    <script src="js/jquery.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-content: stretch;
+            align-items: stretch;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #div {
+            position: relative;
+            order: 0;
+            flex: 1 1 auto;
+            align-self: auto;
+        }
+        
+        #cmd {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50px;
+            z-index: 10;
+            color:red;
+        }
+        
+        #cmd div {
+            display: inline-block;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="cmd">
+        <div id="stop">0</div>/
+        <div id="start">1</div>
+    </div>
+    <div id="div"><canvas id="canvas"></canvas></div>
+    <script>
+        var globalID;
+        var globalCounter = 0;
+
+        function repeatOften() {
+            globalID = requestAnimationFrame(repeatOften);
+
+            drawpoints();
+            
+            for (var i = 0; i < oPoints.collection.length; i++) {
+                oPoints.collection[i].move();
+            }
+            globalCounter++;
+            if (globalCounter > 256) {
+                globalCounter = 0;
+                cancelAnimationFrame(globalID);
+                repeatOften2();
+            }
+        }
+        
+        function repeatOften2(){
+            globalID = requestAnimationFrame(repeatOften2);
+            ctx.save();
+            
+            ctx.translate(512,512);
+            ctx.scale(0.95,0.95);
+            ctx.rotate(Math.PI/180);
+            
+            //ctx.fillRect(0,0,100,100); 
+            
+            var img=document.getElementById("canvas");
+            ctx.drawImage(img,-512,-512);
+            
+            ctx.restore();
+            
+            drawpoints();
+            
+        }
+        function drawpoints(){
+            var colorr = colo.getNewColor();
+            for (var i = 0; i < oPoints.collection.length; i++) {
+                var point1 = oPoints.collection[i];
+                var point2 = (i == oPoints.collection.length - 1) ? oPoints.collection[0] : oPoints.collection[i + 1];
+
+                ctx.beginPath();
+                ctx.moveTo(point1.x, point1.y);
+                ctx.lineTo(point2.x, point2.y);
+                ctx.lineWidth = 20;
+                ctx.strokeStyle = colorr;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+        }
+
+        $("#start").on("click", function() {
+            globalID = requestAnimationFrame(repeatOften);
+        });
+
+        $("#stop").on("click", function() {
+            cancelAnimationFrame(globalID);
+        });
+
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+
+        $(document).ready(function() {
+            globalID = requestAnimationFrame(repeatOften);
+
+            colo = new oColor(10, 1);
+            oPoints.init(5, 1);
+
+            var canvas = $('#canvas');
+            ctx = canvas.get(0).getContext('2d');
+            ctx.canvas.width = oCanvas.w;
+            ctx.canvas.height = oCanvas.h;
+
+        });
+
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+        /***************************************************************************************************/
+
+        var ctx;
+        var colo;
+        var oCanvas = {
+            w: 1024,
+            h: 1024,
+        }
+        var oPoints = {
+            collection: [],
+            init: function(nbp, vtp) {
+                nbp = (nbp != undefined) ? nbp : 2;
+                nbp = (nbp < 2) ? 2 : nbp;
+                vtp = (vtp != undefined) ? vtp : 1;
+                vtp = (vtp < 1) ? 1 : vtp;
+
+                this.collection = [];
+                for (var i = 0; i < nbp; i++) {
+                    this.collection.push(new oPoint(vtp, Math.PI * 2 * i / nbp));
+                }
+
+            },
+        };
+
+        function oPoint(v, d, b) {
+            this.x = 512;
+            this.y = 512;
+            var v = (v != undefined) ? v : 10 * Math.random() + 2;
+            var d = (d != undefined) ? d : Math.PI * 2 * Math.random(); //Math.PI/6;//
+            var b = (b != undefined) ? 1 : 0;
+
+            this.move = function() {
+                this.x += Math.cos(d) * v;
+                this.y += Math.sin(d) * v;
+
+                if (b) {
+                    var deviance = Math.random() * Math.PI / 4 - Math.PI / 8;
+                    var mdx = Math.PI - d * 2 + deviance;
+                    var mdy = Math.PI + (Math.PI / 2 - d) * 2 + deviance;
+
+                    if (this.x < 0) {
+                        this.x = 0;
+                        d += mdx;
+                    }
+                    if (this.x > oCanvas.w) {
+                        this.x = oCanvas.w;
+                        d += mdx;
+                    }
+                    if (this.y < 0) {
+                        this.y = 0;
+                        d += mdy;
+                    }
+                    if (this.y > oCanvas.h) {
+                        this.y = oCanvas.h;
+                        d += mdy;
+                    }
+                }
+                v += 0.01;
+                d += Math.PI / 400;
+            };
+        }
+
+        function oColor(cs, rd) {
+            var c1, c1d, c2, c2d, c3, c3d, c1r, c2r, c3r;
+            c1 = 0;
+            c2 = 0;
+            c3 = 0;
+            c1d = 1;
+            c2d = 1;
+            c3d = 1;
+            cs = (cs != undefined) ? cs : 10;
+            if (rd != undefined && rd) {
+                c1 = Math.floor(Math.random() * 256);
+                c2 = Math.floor(Math.random() * 256);
+                c3 = Math.floor(Math.random() * 256);
+            }
+
+            this.newColor = function() {
+                c1 += c1d * Math.random() * cs;
+                c2 += c2d * Math.random() * cs;
+                c3 += c3d * Math.random() * cs;
+
+                if (c1 < 0 && c1d == -1) c1d = 1;
+                if (c1 > 256 && c1d == 1) c1d = -1;
+                if (c2 < 0 && c2d == -1) c2d = 1;
+                if (c2 > 256 && c2d == 1) c2d = -1;
+                if (c3 < 0 && c3d == -1) c3d = 1;
+                if (c3 > 256 && c3d == 1) c3d = -1;
+
+                c1r = Math.floor(c1);
+                c2r = Math.floor(c2);
+                c3r = Math.floor(c3);
+            };
+
+            this.getNewColor = function() {
+                this.newColor();
+                return this.getColor();
+            }
+
+            this.getColor = function() {
+                return 'rgba(' + c1r + ',' + c2r + ',' + c3r + ',1)';
+            };
+        }
+
+    </script>
+</body>
+
+</html>

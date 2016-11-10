@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>CANVAS - couleurs et arcs</title>
+    <script src="js/jquery.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-content: stretch;
+            align-items: stretch;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #div {
+            position: relative;
+            order: 0;
+            flex: 1 1 auto;
+            align-self: auto;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div id="div"><canvas id="canvas"></canvas></div>
+    <script>
+        var ctx;
+        var i = 0;
+        var c = 0;
+        var a = 00;
+        var c1, c1d, c2, c2d, c3, c3d, c1r, c2r, c3r;
+
+        
+            $(document).ready(function() {
+                var canvas = $('#canvas');
+                ctx = canvas.get(0).getContext('2d');
+                ctx.canvas.width = 1024;
+                ctx.canvas.height = 1024;
+
+                c1 = 0;
+                c2 = 0;
+                c3 = 0;
+                c1d = 1;
+                c2d = 1;
+                c3d = 1;
+
+
+
+
+                window.setTimeout('nextdo(1);nextdo(4);', 1000);
+            });
+
+        var oPlayers = {
+            collection: [],
+            init: function() {
+                this.collection = [
+                    new oPlayer('Charle', '#FF0000', 'img/S_Che01.png')
+                ]
+            },
+        };
+
+        function nextdo(step) {
+            switch (step) {
+
+                case 1:
+                    //var cr = Math.floor(Math.random() * 256);
+                    c1r = Math.floor(c1);
+                    c2r = Math.floor(c2);
+                    c3r = Math.floor(c3);
+                    var colo = 'rgba(' + c1r + ',' + c2r + ',' + c3r + ',1)';
+                    i++;
+                    ctx.beginPath();
+                    var ag = i * 2 * Math.PI / 360;
+                    ctx.arc(Math.cos(ag) * 256 + 512, Math.sin(ag) * 256 + 512, 256, (ag), (ag + Math.PI), false);
+                    ctx.fillStyle = 'rgba(0,0,0,0)';
+                    ctx.fill();
+                    ctx.lineWidth = 5;
+                    ctx.strokeStyle = colo;
+                    ctx.stroke();
+                    window.setTimeout('nextdo(1)', 15);
+                    break;
+                case 2:
+                    //var cr = Math.floor(Math.random() * 256);
+                    c1r = Math.floor(c1);
+                    c2r = Math.floor(c2);
+                    c3r = Math.floor(c3);
+                    var colo = 'rgba(' + c1r + ',' + c2r + ',' + c3r + ',1)';
+                    i++;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(i * 2 * Math.PI / 360) * 256 + 512, Math.sin(i * 2 * Math.PI / 360) * 256 + 512, 128, 0, 2 * Math.PI, false);
+                    ctx.fillStyle = colo;
+                    ctx.fill();
+                    window.setTimeout('nextdo(2)', 15);
+                    break;
+                case 3:
+                    var cr = Math.floor(Math.random() * 256);
+                    var cr = Math.floor(c % 256);
+                    var colo = 'rgba(' + cr + ',' + cr + ',' + cr + ',1)';
+                    i++;
+                    ctx.beginPath();
+                    ctx.rect(i, i, 256, 256);
+                    ctx.fillStyle = colo;
+                    ctx.fill();
+                    if (i < 300) window.setTimeout('nextdo(3)', Math.random() * 0 + 10);
+                    break;
+                case 4:
+
+                    a += 2 * Math.PI / 360;
+
+                    if (c1 < 0 && c1d == -1) c1d = 1;
+                    if (c1 > 256 && c1d == 1) c1d = -1;
+                    if (c2 < 0 && c2d == -1) c2d = 1;
+                    if (c2 > 256 && c2d == 1) c2d = -1;
+                    if (c3 < 0 && c3d == -1) c3d = 1;
+                    if (c3 > 256 && c3d == 1) c3d = -1;
+
+                    c1 += c1d * Math.random() * 5;
+                    c2 += c2d * Math.random() * 5;
+                    c3 += c3d * Math.random() * 5;
+
+                    c += Math.sin(a) + 1;
+                    window.setTimeout('nextdo(4)', (Math.sin(a) + 1) * 0 + 10);
+                    break;
+                default:
+                    $('#linklist').append('rien !<br>');
+            }
+
+        }
+
+    </script>
+</body>
+
+</html>
